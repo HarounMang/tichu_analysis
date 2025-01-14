@@ -58,9 +58,11 @@ def get_gr_tichu_callers(start_cards_lines_split: list[str]) -> set[int]:
 def other_turns_information(turns: list[str], hands: list[set[str]]):
     rows: list[list[any]] = [[], [], [], []]
     tichu_callers: set[int] = set()
-    finished_position = 1.0
+    finished_position = 1.0 
     finished_players: set[int] = set()
     game_ended = False
+    wish_called = False
+    wisher_id = False
     for i, line in enumerate(turns):
         if game_ended:
             break
@@ -71,10 +73,7 @@ def other_turns_information(turns: list[str], hands: list[set[str]]):
 
         if line[:7] == "Wunsch:":
             wish_called = line.split(":", 1)[1]
-            wisher_id = int(turns[i - 1][1])  # the previous line holds the id of the person who wishes a card
-            rows[wisher_id].append(wish_called)
-            for id_ in set({0, 1, 2, 3}) - set({wisher_id}):
-                rows[id_].append(None)
+            wisher_id = int(turns[i-1][1])  # the previous line holds the id of the person who wishes a card
             continue
 
         if line[0] != "(" or line[-6:] == "passt.":
@@ -90,18 +89,37 @@ def other_turns_information(turns: list[str], hands: list[set[str]]):
                 rows[player_id].append(finished_position)
                 finished_position += 1
                 finished_players.add(player_id)
-
-            if len(finished_players) == 2 and (finished_players == set({0, 2}) or finished_players == set({1, 3})):
-                for id in set({0, 1, 2, 3}) - finished_players:
+            
+            if len(finished_players) == 2 and (finished_players == set({0,2}) or finished_players == set({1,3})):              
+                for id in set({0,1,2,3}) - finished_players:
                     rows[id].append(3.5)
+
+                if wish_called:
+                    rows[wisher_id].append(wish_called)
+                    for id_ in set({0,1,2,3}) - set({wisher_id}):
+                        rows[id_].append(None)
+                else:
+                    for id in set({0,1,2,3}):
+                        rows[id].append(None)
+                
                 game_ended = True
+                
                 break
             elif len(finished_players) == 3:
-                missing_id = (set({0, 1, 2, 3}) - finished_players).pop()
+                missing_id = (set({0,1,2,3}) - finished_players).pop()
                 rows[missing_id].append(4.0)
+
+                if wish_called:
+                    rows[wisher_id].append(wish_called)
+                    for id_ in set({0,1,2,3}) - set({wisher_id}):
+                        rows[id_].append(None)
+                else:
+                    for id in set({0,1,2,3}):
+                        rows[id].append(None)
+
                 game_ended = True
                 break
-
+    
     if all(len(row) == 1 for row in rows):
         for row in rows:
             row.append(None)
@@ -181,7 +199,7 @@ if __name__ == "__main__":
             for row in game_rows:
                 rows.append(row)
 
-    with open('rows_eline_haroun.csv', 'w', newline='') as f:
+    with open('rows.csv', 'w', newline='') as f:
         write = csv.writer(f)
         write.writerow(columns)
         write.writerows(rows)
