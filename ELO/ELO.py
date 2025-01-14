@@ -76,7 +76,7 @@ if __name__ == "__main__":
     print(f"Updated ratings saved to {output_file}")
 
 # Command to run the script:
-# spark-submit ELO.py hdfs:///user/s2163918/input/games.csv hdfs:///user/s2163918/input/ratings.csv
+# spark-submit hdfs:///user/s2163918/input/ChronELO.py hdfs:///user/s2163918/input/games.csv hdfs:///user/s2163918/input/ratings.csv
 
 # Input Files:
 # 1. Games File (games.csv): Format: Game_ID,Winner_Team,Loser_Team
