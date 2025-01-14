@@ -1,36 +1,37 @@
+# The ELO formula:
+# - Each player/team has an ELO rating that represents their skill level.
+# - The expected score is calculated based on the ratings of the two teams.
+# - Ratings are updated after each match using the formula:
+#     NewRating = CurrentRating + K * (ActualScore - ExpectedScore)
+#     - K is a constant that determines the sensitivity of rating changes.
+#     - ActualScore is 1 for a win and 0 for a loss.
+#     - ExpectedScore is the predicted outcome based on the ELO formula.
+# - Over time, stronger players/teams will have higher ratings as they win more often than expected.
+
 from pyspark.sql import SparkSession
 import sys
 
+# Calculate the expected score for a team based on ELO ratings
+def calculate_expected_score(team_rating, opponent_rating):
+    # ELO formula: Expected score = 1 / (1 + 10 ^ ((OpponentRating - TeamRating) / 400))
+    return 1 / (1 + 10 ** ((opponent_rating - team_rating) / 400))
 
-# Function to calculate the expected score for a team based on Elo ratings
-def calculate_expected_score(team_rating, opponent_team_rating):
-    # Elo formula: Expected score = 1 / (1 + 10^((OpponentRating - TeamRating) / 400))
-    # This formula determines the probability of a team winning against another team
-    return 1 / (1 + 10 ** ((opponent_team_rating - team_rating) / 400))
+# Update the ELO ratings after a match
+def update_elo(winners, losers, ratings, k_factor=32):
+    # Calculate the average ELO rating for the teams
+    winners_rating = sum(ratings.get(player, 1500) for player in winners) / len(winners)
+    losers_rating = sum(ratings.get(player, 1500) for player in losers) / len(losers)
 
+    # Calculate if it was expected that this team won based on the ELO scores
+    expectation_winner = calculate_expected_score(winners_rating, losers_rating)
 
-# Function to update the Elo ratings after a match
-def update_elo(winner_team, loser_team, ratings, k_factor=32):
-    # Calculate the average Elo rating for the winner team
-    winner_team_rating = sum(ratings.get(player, 1500) for player in winner_team) / len(winner_team)
+    # Update ELO ratings for the players
+    # A high expectation leads to a small increase in score for the winner and a low decrease for the loser
+    for player in winners:
+        ratings[player] = ratings.get(player, 1500) + k_factor * (1 - expectation_winner)
 
-    # Calculate the average Elo rating for the loser team
-    loser_team_rating = sum(ratings.get(player, 1500) for player in loser_team) / len(loser_team)
-
-    # Calculate the expected scores for both teams
-    expected_winner = calculate_expected_score(winner_team_rating, loser_team_rating)
-    expected_loser = 1 - expected_winner  # Complement of the winner's expected score
-
-    # Update Elo ratings for players in the winner team
-    for player in winner_team:
-        ratings[player] = ratings.get(player, 1500) + k_factor * (1 - expected_winner)
-        # Elo update: Rating = CurrentRating + K * (ActualScore - ExpectedScore)
-        # ActualScore for winner = 1
-
-    # Update Elo ratings for players in the loser team
-    for player in loser_team:
-        ratings[player] = ratings.get(player, 1500) + k_factor * (0 - expected_loser)
-        # ActualScore for loser = 0
+    for player in losers:
+        ratings[player] = ratings.get(player, 1500) + k_factor * (-1 + expectation_winner)
 
     return ratings
 
@@ -55,11 +56,11 @@ if __name__ == "__main__":
         game_id = row["Game_ID"]  # Game identifier
 
         # Split Winner_Team and Loser_Team into individual player IDs
-        winner_team = row["Winner_Team"].split(';')
-        loser_team = row["Loser_Team"].split(';')
+        winners = row["Winner_Team"].split(';')
+        losers = row["Loser_Team"].split(';')
 
-        # Update ratings using the Elo formula
-        ratings = update_elo(winner_team, loser_team, ratings)
+        # Update ratings using the ELO formula
+        ratings = update_elo(winners, losers, ratings)
 
     # Save the updated ratings back to HDFS
     output_file = "hdfs:///user/s2163918/output/updated_ratings.csv"
@@ -73,16 +74,6 @@ if __name__ == "__main__":
     ratings_df.coalesce(1).write.csv(output_file, header=True, mode="overwrite")
 
     print(f"Updated ratings saved to {output_file}")
-
-# How the Elo formula works:
-# - Each player/team has an Elo rating that represents their skill level.
-# - The expected score is calculated based on the ratings of the two teams.
-# - Ratings are updated after each match using the formula:
-#     NewRating = CurrentRating + K * (ActualScore - ExpectedScore)
-#     - K is a constant that determines the sensitivity of rating changes.
-#     - ActualScore is 1 for a win and 0 for a loss.
-#     - ExpectedScore is the predicted outcome based on the Elo formula.
-# - Over time, stronger players/teams will have higher ratings as they win more often than expected.
 
 # Command to run the script:
 # spark-submit ELO.py hdfs:///user/s2163918/input/games.csv hdfs:///user/s2163918/input/ratings.csv
