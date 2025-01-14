@@ -20,3 +20,6 @@ gr-tichu
 out
 wish
 tichu
+game-id
+score
+bomb-received
