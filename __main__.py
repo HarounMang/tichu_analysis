@@ -199,7 +199,7 @@ if __name__ == "__main__":
             for row in game_rows:
                 rows.append(row)
 
-    with open('rows_eline_haroun.csv', 'w', newline='') as f:
+    with open('rows.csv', 'w', newline='') as f:
         write = csv.writer(f)
         write.writerow(columns)
         write.writerows(rows)
