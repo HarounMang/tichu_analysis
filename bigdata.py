@@ -205,7 +205,6 @@ if __name__ == "__main__":
         .master("local[*]") \
         .getOrCreate()
     sc = spark.sparkContext
-    sc.setLogLevel("ERROR")
 
     rdd = sc.wholeTextFiles('/user/s2860406/dev_tichu')
     processed_rdd = rdd.flatMap(map_to_rows)
