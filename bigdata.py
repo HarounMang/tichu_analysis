@@ -9,7 +9,6 @@ def split_dealing_turn(head: str):
     if "BOMBE" in deal_lines_split[-1]:
         bombs_players = deal_lines_split[-1].split(":")[1].strip().split(" ")
         bombs_player_id = [int(player[1]) for player in bombs_players]
-        print(bombs_player_id)
         deal_lines_split = deal_lines_split[:4]
 
     return gr_cards_lines_split, start_cards_lines_split, deal_lines_split, bombs_player_id
@@ -132,7 +131,7 @@ def score(score_line: str):
     return scores_even, scores_uneven
 
 
-def csv_rows(game: str) -> list[str]:
+def csv_rows(game: str, game_id: int) -> list[str]:
     head_other_split = game.split("---------------Rundenverlauf------------------\n", 1)
     head = head_other_split[0]
     body = head_other_split[1]
@@ -165,7 +164,7 @@ def csv_rows(game: str) -> list[str]:
             row.append(0)
 
     for row in rows:  # game id
-        row.append(1)
+        row.append(game_id)
 
     scores_even, scores_uneven = score(body.strip().split("\n")[-1])
     for id, row in enumerate(rows):  # score per player
@@ -182,15 +181,22 @@ def csv_rows(game: str) -> list[str]:
 
     return rows
 
+def extract_game_id(filepath: str):
+    split_filepath = filepath.split('dev_tichu/')
+    filename = split_filepath[1]
+    split_filename = filename.split('.', 1)
+    str_game_id = split_filename[0]
+    return int(str_game_id)
+
 def map_to_rows(text_file):
     rounds = text_file[1].split("---------------Gr.Tichukarten------------------\n")[1:]
     rows = []
+    game_id = extract_game_id(text_file[0])
     for rnd in rounds:
-        rnd_rows = csv_rows(rnd)
+        rnd_rows = csv_rows(rnd, game_id)
         for row in rnd_rows:
             rows.append(row)
     return rows
-
 
 if __name__ == "__main__":
     from pyspark.sql import SparkSession
@@ -199,6 +205,7 @@ if __name__ == "__main__":
         .master("local[*]") \
         .getOrCreate()
     sc = spark.sparkContext
+    sc.setLogLevel("ERROR")
 
     rdd = sc.wholeTextFiles('/user/s2860406/dev_tichu')
     processed_rdd = rdd.flatMap(map_to_rows)
