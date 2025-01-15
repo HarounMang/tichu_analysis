@@ -40,4 +40,4 @@ if __name__ == "__main__":
     wins_with_tichu(df, 'gr-tichu', 'gr-tichu-cards')
 
     # Analyse the wins which called Tichu
-    wins_with_tichu(df, 'tichu', 'tichu-cards')
+    wins_with_tichu(df, 'tichu', 'remaining-cards')
