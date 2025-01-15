@@ -1,7 +1,7 @@
 # This file executes the queries to answer our research questions
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, array_intersect, size
+from pyspark.sql.functions import col, array_intersect, size, concat
 
 def wins_with_tichu(df, call, hand):
     # Calculate the percentage of hands that won
@@ -39,10 +39,13 @@ if __name__ == "__main__":
     csv = "hdfs:///user/s2163918/input/rows.csv"
 
     # Load the csv into a DataFrame
-    df = spark.read.csv(csv, header=True)
+    df = spark.read.csv(csv, header=True).withColumn(
+        'tichu-cards',
+        concat(col('gr-tichu-cards'), col('remaining-cards'))
+    )
 
     # Analyse the wins which called Grand Tichu
     wins_with_tichu(df, 'gr-tichu', 'gr-tichu-cards')
 
     # Analyse the wins which called Tichu
-    wins_with_tichu(df, 'tichu', 'remaining-cards')
+    wins_with_tichu(df, 'tichu', 'tichu-cards')
