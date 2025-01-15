@@ -26,15 +26,17 @@ def starting_turn_information(gr_cards_line: str, start_cards_line: str, deal_li
     gr_cards = set()
 
     for card in player_gr_cards_split[1].split(" ")[:-1]:
-        row.append(card)
         gr_cards.add(card)
         hands[player_id].add(card)
 
+    strt_cards = []
     for card in start_cards_line.split(" ", 1)[1].split(" ")[:-1]:
         if card not in gr_cards:
-            row.append(card)
+            strt_cards.append(card)
             hands[player_id].add(card)
 
+    row.append(list(gr_cards))
+    row.append(strt_cards)
     for deal_line in deal_line.split("gibt: ", 1)[1:]:
         for i, deal_string in enumerate(deal_line.split(": ", 3)[1:], start=1):
             card = deal_string.split(" - ", maxsplit=1)[0]
@@ -203,24 +205,12 @@ if __name__ == "__main__":
     rdd = sc.wholeTextFiles('/user/s2860406/dev_tichu')
     processed_rdd = rdd.flatMap(map_to_rows)
 
-    from pyspark.sql.types import StructType, StructField, StringType, FloatType, IntegerType
+    from pyspark.sql.types import StructType, StructField, StringType, FloatType, IntegerType, ArrayType
 
     schema = StructType([
         StructField("player", StringType()),
-        StructField("gr-tichu-card-1", StringType()),
-        StructField("gr-tichu-card-2", StringType()),
-        StructField("gr-tichu-card-3", StringType()),
-        StructField("gr-tichu-card-4", StringType()),
-        StructField("gr-tichu-card-5", StringType()),
-        StructField("gr-tichu-card-6", StringType()),
-        StructField("gr-tichu-card-7", StringType()),
-        StructField("gr-tichu-card-8", StringType()),
-        StructField("start-card-1", StringType()),
-        StructField("start-card-2", StringType()),
-        StructField("start-card-3", StringType()),
-        StructField("start-card-4", StringType()),
-        StructField("start-card-5", StringType()),
-        StructField("start-card-6", StringType()),
+        StructField("gr-tichu-cards", ArrayType(StringType())),
+        StructField("remaining-cards", ArrayType(StringType())),
         StructField("deal-left", StringType()),
         StructField("deal-middle", StringType()),
         StructField("deal-right", StringType()),
@@ -235,4 +225,4 @@ if __name__ == "__main__":
 
     df = spark.createDataFrame(processed_rdd, schema=schema)
     #df.show()
-    df.write.csv("./tichu_data", mode="overwrite")
+    df.write.parquet("./tichu_data", mode="overwrite")
