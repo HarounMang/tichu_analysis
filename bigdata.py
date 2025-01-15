@@ -1,3 +1,5 @@
+FOLDER = 'dev_tichu'
+
 def split_dealing_turn(head: str):
     gr_cards_lines_other_split = head.split("---------------Startkarten------------------\n", 1)
     gr_cards_lines_split = gr_cards_lines_other_split[0].split("\n")
@@ -182,7 +184,7 @@ def csv_rows(game: str, game_id: int) -> list[str]:
     return rows
 
 def extract_game_id(filepath: str):
-    split_filepath = filepath.split('dev_tichu/')
+    split_filepath = filepath.split(f'{FOLDER}/')
     filename = split_filepath[1]
     split_filename = filename.split('.', 1)
     str_game_id = split_filename[0]
