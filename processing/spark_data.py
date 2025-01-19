@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, StringType, FloatType, IntegerType
+from pyspark.sql.types import StructType, StructField, StringType, FloatType, IntegerType, ArrayType
 
 from shared import process_text_file
 from columns import COLUMNS, Type
@@ -8,6 +8,7 @@ spark_sql_type = {
     Type.STRING: StringType(),
     Type.INTEGER: IntegerType(),
     Type.FLOAT: FloatType(),
+    Type.STRING_ARRAY: ArrayType(StringType(), containsNull=False)
 }
 
 def map_to_rows(rdd_entry: tuple[str, str]):

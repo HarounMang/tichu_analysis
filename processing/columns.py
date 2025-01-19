@@ -5,6 +5,7 @@ class Type(Enum):
     INTEGER = "integer"
     STRING = "string"
     FLOAT = "float"
+    STRING_ARRAY = "string_array"
 
 COLUMNS = {
     "game-id": {
@@ -19,60 +20,12 @@ COLUMNS = {
         "type": Type.STRING,
         "nullable": False,
     },
-    "gr-tichu-card-1": {
-        "type": Type.STRING,
+    "gr-tichu-cards": {
+        "type": Type.STRING_ARRAY,
         "nullable": False,
     },
-    "gr-tichu-card-2": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "gr-tichu-card-3": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "gr-tichu-card-4": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "gr-tichu-card-5": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "gr-tichu-card-6": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "gr-tichu-card-7": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "gr-tichu-card-8": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "extra-card-1": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "extra-card-2": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "extra-card-3": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "extra-card-4": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "extra-card-5": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "extra-card-6": {
-        "type": Type.STRING,
+    "extra-cards": {
+        "type": Type.STRING_ARRAY,
         "nullable": False
     },
     "deal-left": {
@@ -87,60 +40,8 @@ COLUMNS = {
         "type": Type.STRING,
         "nullable": False
     },
-    "start-card-1": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "start-card-2": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "start-card-3": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "start-card-4": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "start-card-5": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "start-card-6": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "start-card-7": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "start-card-8": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "start-card-9": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "start-card-10": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "start-card-11": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "start-card-12": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "start-card-13": {
-        "type": Type.STRING,
-        "nullable": False
-    },
-    "start-card-14": {
-        "type": Type.STRING,
+    "start-cards": {
+        "type": Type.STRING_ARRAY,
         "nullable": False
     },
     "gr-tichu": {

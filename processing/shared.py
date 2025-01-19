@@ -15,33 +15,56 @@ def split_dealing_turn(head: str):
 
 
 def starting_turn_information(gr_cards_line: str, start_cards_line: str, deal_line: str, hands: list[set[str]],
-                              player_id: int) -> list[str]:
-    row = []
+                              player_id: int) -> list[list[str]]:
+    information = {
+        "name": None,
+        "gr_cards": set(),
+        "extra_cards": set(),
+        "deal": {
+            "left": None,
+            "middle": None,
+            "right": None,
+        }
+    }
 
     player_gr_cards_split = gr_cards_line.split(" ", 1)
     name = player_gr_cards_split[0][3:]
 
-    row.append(name)
+    information["name"] = name
     gr_cards = set()
 
     for card in player_gr_cards_split[1].split(" ")[:-1]:
-        row.append(card)
         gr_cards.add(card)
         hands[player_id].add(card)
 
+    extra_cards = set()
+
     for card in start_cards_line.split(" ", 1)[1].split(" ")[:-1]:
         if card not in gr_cards:
-            row.append(card)
+            extra_cards.add(card)
             hands[player_id].add(card)
 
+    left, middle, right = None, None, None
+
     for deal_line in deal_line.split("gibt: ", 1)[1:]:
+        deal_line_split = deal_line.split(": ", 3)[1:]
+        left = deal_line_split[1].split(" - ", maxsplit=1)[0]
+        middle = deal_line_split[2].split(" - ", maxsplit=1)[0]
+        
         for i, deal_string in enumerate(deal_line.split(": ", 3)[1:], start=1):
             card = deal_string.split(" - ", maxsplit=1)[0]
-            row.append(card)
+            
+            if i == 1:
+                left = card
+            elif i == 2:
+                middle = card
+            elif i == 3:
+                right = card
+
             hands[player_id].remove(card)
             hands[(player_id + i) % 4].add(card)
 
-    return row
+    return name, gr_cards, extra_cards, {"left": left, "middle": middle, "right": right}
 
 
 def get_gr_tichu_callers(start_cards_lines_split: list[str]) -> set[int]:
@@ -144,12 +167,19 @@ def csv_rows(rnd: str, rnd_id: int) -> list[any]:
     hands: list[set[str]] = [set(), set(), set(), set()]
     
     for id_ in range(4):
-        rows[id_].extend(
-            starting_turn_information(gr_cards_lines_split[id_], start_cards_lines_split[id_], deal_lines_split[id_],
-                                      hands, id_)) 
+        name, gr_cards, extra_cards, deal = starting_turn_information(
+            gr_cards_lines_split[id_], start_cards_lines_split[id_], deal_lines_split[id_], hands, id_
+        )
+        row = rows[id_]
+        row.append(name)
+        row.append(list(gr_cards))
+        row.append(list(extra_cards))
+        row.append(deal["left"])
+        row.append(deal["middle"])
+        row.append(deal["right"])
         
     for i, hand in enumerate(hands):
-        rows[i].extend(hand)
+        rows[i].append(list(hand.copy()))
 
     gr_tichu_callers = get_gr_tichu_callers(start_cards_lines_split)
     for id_ in set({0, 1, 2, 3}):
