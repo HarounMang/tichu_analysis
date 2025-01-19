@@ -11,7 +11,7 @@ spark_sql_type = {
 }
 
 def map_to_rows(rdd_entry: tuple[str, str]):
-    game_id = int(rdd_entry[2].split("/")[-1].split(".")[0])
+    game_id = int(rdd_entry[0].split("/")[-1].split(".")[0])
     return process_text_file(rdd_entry[1], game_id)
 
 if __name__ == "__main__":
