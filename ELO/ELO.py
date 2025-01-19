@@ -56,11 +56,12 @@ if __name__ == "__main__":
         game_id = row["Game_ID"]  # Game identifier
 
         # Split Winner_Team and Loser_Team into individual player IDs
-        winners = row["Winner_Team"].split(';')
-        losers = row["Loser_Team"].split(';')
+        if row["Draw"] != 1:
+            winners = [row["Winner1"], row["Winner2"]]
+            losers = [row["Loser1"], row["Loser2"]]
 
-        # Update ratings using the ELO formula
-        ratings = update_elo(winners, losers, ratings)
+            # Update ratings using the ELO formula
+            ratings = update_elo(winners, losers, ratings)
 
     # Save the updated ratings back to HDFS
     output_file = "hdfs:///user/s2163918/output/updated_ratings.csv"
