@@ -103,41 +103,40 @@ def other_turns_information(turns: list[str], hands: list[set[str]]):
         for card in line.split(": ", 1)[1].strip().split(" "):
             hands[player_id].remove(card)
 
-        for hand in hands:
-            if player_id not in finished_players and len(hand) == 0:
-                rows[player_id].append(finished_position)
-                finished_position += 1
-                finished_players.add(player_id)
+        if player_id not in finished_players and len(hands[player_id]) == 0:
+            rows[player_id].append(finished_position)
+            finished_position += 1
+            finished_players.add(player_id)
+        
+        if len(finished_players) == 2 and (finished_players == set({0,2}) or finished_players == set({1,3})):     
+            for id in set({0,1,2,3}) - finished_players:
+                rows[id].append(3.5)
+
+            if wish_called:
+                rows[wisher_id].append(wish_called)
+                for id_ in set({0,1,2,3}) - set({wisher_id}):
+                    rows[id_].append(None)
+            else:
+                for id in set({0,1,2,3}):
+                    rows[id].append(None)
             
-            if len(finished_players) == 2 and (finished_players == set({0,2}) or finished_players == set({1,3})):              
-                for id in set({0,1,2,3}) - finished_players:
-                    rows[id].append(3.5)
+            game_ended = True
+            
+            break
+        elif len(finished_players) == 3:
+            missing_id = (set({0,1,2,3}) - finished_players).pop()
+            rows[missing_id].append(4.0)
 
-                if wish_called:
-                    rows[wisher_id].append(wish_called)
-                    for id_ in set({0,1,2,3}) - set({wisher_id}):
-                        rows[id_].append(None)
-                else:
-                    for id in set({0,1,2,3}):
-                        rows[id].append(None)
-                
-                game_ended = True
-                
-                break
-            elif len(finished_players) == 3:
-                missing_id = (set({0,1,2,3}) - finished_players).pop()
-                rows[missing_id].append(4.0)
+            if wish_called:
+                rows[wisher_id].append(wish_called)
+                for id_ in set({0,1,2,3}) - set({wisher_id}):
+                    rows[id_].append(None)
+            else:
+                for id in set({0,1,2,3}):
+                    rows[id].append(None)
 
-                if wish_called:
-                    rows[wisher_id].append(wish_called)
-                    for id_ in set({0,1,2,3}) - set({wisher_id}):
-                        rows[id_].append(None)
-                else:
-                    for id in set({0,1,2,3}):
-                        rows[id].append(None)
-
-                game_ended = True
-                break
+            game_ended = True
+            break
     
     if all(len(row) == 1 for row in rows):
         for row in rows:
