@@ -34,7 +34,7 @@ def wins_with_tichu_call(df, call, hand):
 
     # Check the percentage of wins with a bomb
     hands = filtered.filter(col('bomb-received') == 1)
-
+    
     wins = win_percentage(hands)
     print(wins, "% of players won after their call with a bomb")
 
@@ -46,7 +46,7 @@ def cards_with_winning_tichu_call(df, call, hand):
     # Count the frequencies of cards in winning hands
     counts = (
         filtered
-        .select(explode(col('hand')).alias('card'))
+        .select(explode(col(hand)).alias('card'))
         .groupBy('card').count()
         .orderBy(col('count').desc()).limit(8)
         )
