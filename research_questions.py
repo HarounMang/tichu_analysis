@@ -1,16 +1,10 @@
 # This file executes the queries to answer our research questions
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, array_intersect, size, concat, explode
+from pyspark.sql.functions import col, array_intersect, size, concat, explode, array_contains
 
 # Calculate the percentage of hands that won after calling (Grand) Tichu
 def wins_with_tichu_call(df, call, hand):
-    # Calculate the percentage of hands that won
-    def win_percentage(hands):
-        total = hands.count()
-        wins = hands.filter(col('out') == 1.0).count()
-        return wins/total if total > 0 else 0
-
     # Filter the rows which called (Grand) Tichu
     filtered = df.filter(col(call) == 1)
 
@@ -38,6 +32,12 @@ def wins_with_tichu_call(df, call, hand):
     wins = win_percentage(hands)
     print(wins, "% of players won after their call with a bomb")
 
+# Calculate the percentage of hands that won
+def win_percentage(hands):
+    total = hands.count()
+    wins = hands.filter(col('out') == 1.0).count()
+    return wins/total if total > 0 else 0
+
 # Find the most common cards in a hand that had an accurate (Grand) Tichu call
 def cards_with_winning_tichu_call(df, call, hand):
     # Filter the rows which called (Grand) Tichu and won
@@ -53,6 +53,28 @@ def cards_with_winning_tichu_call(df, call, hand):
     
     # Print the eight most frequent cards
     print("\nThe eight most frequent cards are:\n", counts)
+
+def passing_the_dog(df):
+    # Filter the rows which called Grand Tichu
+    filtered = df.filter(col('gr-tichu') == 1)
+
+    # Find the percentage of wins with the Dog
+    hands = filtered.filter(array_contains(col('gr-tichu-cards'), 'Hu'))
+
+    wins = win_percentage(hands)
+    print(wins, "% of players won after their call with the dog in their Grand Tichu cards")
+
+    # Find the percentage of wins after passing the Dog to the ally
+    hands = filtered.filter(col('deal-middle') == 'Hu')
+
+    wins = win_percentage(hands)
+    print(wins, "% of players won after passing the dog from their Grand Tichu cards")
+
+    # Find the percentage of wins after receiving the dog from an opponent    
+    hands = filtered.filter(~array_contains(col('tichu-cards'), 'Hu') and array_contains(col('start-cards'), 'Hu'))
+
+    wins = win_percentage(hands)
+    print(wins, "% of players won after receiving the dog from an opponent")
     
 if __name__ == "__main__":
     # Initialize Spark session for distributed processing
@@ -84,3 +106,12 @@ if __name__ == "__main__":
 
     # Analyse which cards the player had when calling an accurate Tichu
     cards_with_winning_tichu_call(calls, 'tichu', 'tichu-cards')
+
+    print("\n\n--- PASSING THE DOG ---")
+
+    calls = df.select(col('gr-tichu-cards'), col('out'), col('remaining-cards'), col('start-cards'), col('deal-middle')).withColumn(
+        'tichu-cards',
+        concat(col('gr-tichu-cards'), col('remaining-cards'))
+    )
+    # Analyse the effect of the dog on Grand Tichu
+    passing_the_dog(calls)
