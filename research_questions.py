@@ -39,13 +39,15 @@ if __name__ == "__main__":
     csv = "hdfs:///user/s2163918/input/rows.csv"
 
     # Load the csv into a DataFrame
-    df = spark.read.csv(csv, header=True).withColumn(
+    df = spark.read.csv(csv, header=True)
+    
+    calls = df.select(col('gr-tichu-cards'), col('out'), col('remaining-cards')).withColumn(
         'tichu-cards',
         concat(col('gr-tichu-cards'), col('remaining-cards'))
     )
 
     # Analyse the wins which called Grand Tichu
-    wins_with_tichu(df, 'gr-tichu', 'gr-tichu-cards')
+    wins_with_tichu(calls, 'gr-tichu', 'gr-tichu-cards')
 
     # Analyse the wins which called Tichu
-    wins_with_tichu(df, 'tichu', 'tichu-cards')
+    wins_with_tichu(calls, 'tichu', 'tichu-cards')
