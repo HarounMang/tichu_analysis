@@ -32,6 +32,12 @@ def wins_with_tichu_call(df, call, hand):
     wins = win_percentage(hands)
     print(wins, "% of players won after their call with four high cards")
 
+    # Check the percentage of wins with a bomb
+    hands = filtered.filter(col('bomb-received') == 1)
+
+    wins = win_percentage(hands)
+    print(wins, "% of players won after their call with a bomb")
+
 # Find the most common cards in a hand that had an accurate (Grand) Tichu call
 def cards_with_winning_tichu_call(df, call, hand):
     # Filter the rows which called (Grand) Tichu and won
@@ -58,7 +64,7 @@ if __name__ == "__main__":
     # Load the csv into a DataFrame
     df = spark.read.csv(csv, header=True)
     
-    calls = df.select(col('gr-tichu-cards'), col('out'), col('remaining-cards')).withColumn(
+    calls = df.select(col('gr-tichu-cards'), col('out'), col('remaining-cards'), col('bomb-received')).withColumn(
         'tichu-cards',
         concat(col('gr-tichu-cards'), col('remaining-cards'))
     )
