@@ -15,21 +15,24 @@ def wins_with_tichu_call(df, call, hand):
 
     # Filter the rows which were out first
     wins = win_percentage(filtered)
-    print(wins, "% of players won after calling Grand Tichu")
+    print(wins, "% of players won after their call")
 
     # Check the percentage of wins with the Dragon and the Phoenix
     cards = ["Dr", "Ph"]
     hands = filtered.filter(size(array_intersect(col(hand), cards)) == 2)
 
     wins = win_percentage(hands)
-    print(wins, "% of players won after calling Grand Tichu with a Dragon and a Phoenix")
+    print(wins, "% of players won after their call with a Dragon and a Phoenix")
 
     # Check the percentage of wins with at least four of the best eight cards
     cards = ["Dr", "Ph", "Hu", "Ma", "RA", "SA", "GA", "BA"]
     hands = filtered.filter(size(array_intersect(col(hand), cards)) >= 4)
 
     wins = win_percentage(hands)
-    print(wins, "% of players won after calling Grand Tichu with four high cards")
+    print(wins, "% of players won after their call with four high cards")
+
+def cards_with_winning_tichu_call():
+    pass
 
 if __name__ == "__main__":
     # Initialize Spark session for distributed processing
@@ -46,8 +49,18 @@ if __name__ == "__main__":
         concat(col('gr-tichu-cards'), col('remaining-cards'))
     )
 
+    print("--- GRAND TICHU ---")
+
     # Analyse the wins which called Grand Tichu
     wins_with_tichu_call(calls, 'gr-tichu', 'gr-tichu-cards')
 
+    # Analyse which cards the player had when calling an accurate Grand Tichu
+    cards_with_winning_tichu_call(calls, 'gr-tichu', 'gr-tichu-cards')
+
+    print("--- TICHU ---")
+    
     # Analyse the wins which called Tichu
     wins_with_tichu_call(calls, 'tichu', 'tichu-cards')
+
+    # Analyse which cards the player had when calling an accurate Tichu
+    cards_with_winning_tichu_call(calls, 'tichu', 'tichu-cards')
