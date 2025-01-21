@@ -1,5 +1,170 @@
 import csv
 
+from pyspark.sql.types import StructType, StructField, StringType, FloatType, IntegerType
+
+COLUMNS = {
+    "game-id": {
+        "type": IntegerType,
+        "nullable": False,
+    },
+    "round": {
+        "type": IntegerType,
+        "nullable": False,
+    },
+    "player": {
+        "type": StringType,
+        "nullable": False,
+    },
+    "gr-tichu-card-1": {
+        "type": StringType,
+        "nullable": False,
+    },
+    "gr-tichu-card-2": {
+        "type": StringType,
+        "nullable": False
+    },
+    "gr-tichu-card-3": {
+        "type": StringType,
+        "nullable": False
+    },
+    "gr-tichu-card-4": {
+        "type": StringType,
+        "nullable": False
+    },
+    "gr-tichu-card-5": {
+        "type": StringType,
+        "nullable": False
+    },
+    "gr-tichu-card-6": {
+        "type": StringType,
+        "nullable": False
+    },
+    "gr-tichu-card-7": {
+        "type": StringType,
+        "nullable": False
+    },
+    "gr-tichu-card-8": {
+        "type": StringType,
+        "nullable": False
+    },
+    "extra-card-1": {
+        "type": StringType,
+        "nullable": False
+    },
+    "extra-card-2": {
+        "type": StringType,
+        "nullable": False
+    },
+    "extra-card-3": {
+        "type": StringType,
+        "nullable": False
+    },
+    "extra-card-4": {
+        "type": StringType,
+        "nullable": False
+    },
+    "extra-card-5": {
+        "type": StringType,
+        "nullable": False
+    },
+    "extra-card-6": {
+        "type": StringType,
+        "nullable": False
+    },
+    "deal-left": {
+        "type": StringType,
+        "nullable": False
+    },
+    "deal-middle": {
+        "type": StringType,
+        "nullable": False
+    },
+    "deal-right": {
+        "type": StringType,
+        "nullable": False
+    },
+    "start-card-1": {
+        "type": StringType,
+        "nullable": False
+    },
+    "start-card-2": {
+        "type": StringType,
+        "nullable": False
+    },
+    "start-card-3": {
+        "type": StringType,
+        "nullable": False
+    },
+    "start-card-4": {
+        "type": StringType,
+        "nullable": False
+    },
+    "start-card-5": {
+        "type": StringType,
+        "nullable": False
+    },
+    "start-card-6": {
+        "type": StringType,
+        "nullable": False
+    },
+    "start-card-7": {
+        "type": StringType,
+        "nullable": False
+    },
+    "start-card-8": {
+        "type": StringType,
+        "nullable": False
+    },
+    "start-card-9": {
+        "type": StringType,
+        "nullable": False
+    },
+    "start-card-10": {
+        "type": StringType,
+        "nullable": False
+    },
+    "start-card-11": {
+        "type": StringType,
+        "nullable": False
+    },
+    "start-card-12": {
+        "type": StringType,
+        "nullable": False
+    },
+    "start-card-13": {
+        "type": StringType,
+        "nullable": False
+    },
+    "start-card-14": {
+        "type": StringType,
+        "nullable": False
+    },
+    "gr-tichu": {
+        "type": IntegerType,
+        "nullable": False
+    },
+    "out": {
+        "type": FloatType,
+        "nullable": False
+    },
+    "wish": {
+        "type": StringType,
+        "nullable": True
+    },
+    "tichu": {
+        "type": IntegerType,
+        "nullable": False
+    },
+    "score": {
+        "type": IntegerType,
+        "nullable": False
+    },
+    "bomb-received": {
+        "type": IntegerType,
+        "nullable": False
+    },
+}
+
 
 def split_dealing_turn(head: str):
     gr_cards_lines_other_split = head.split("---------------Startkarten------------------\n", 1)
@@ -12,7 +177,6 @@ def split_dealing_turn(head: str):
     if "BOMBE" in deal_lines_split[-1]:
         bombs_players = deal_lines_split[-1].split(":")[1].strip().split(" ")
         bombs_player_id = [int(player[1]) for player in bombs_players]
-        print(bombs_player_id)
         deal_lines_split = deal_lines_split[:4]
 
     return gr_cards_lines_split, start_cards_lines_split, deal_lines_split, bombs_player_id
@@ -135,8 +299,10 @@ def score(score_line: str):
     return scores_even, scores_uneven
 
 
-def csv_rows(game: str) -> list[str]:
-    head_other_split = game.split("---------------Rundenverlauf------------------\n", 1)
+def csv_rows(rnd: str, rnd_id: int) -> list[any]:
+    rows: list[list[any]] = [[rnd_id] for _ in range(4)]  # round id
+    
+    head_other_split = rnd.split("---------------Rundenverlauf------------------\n", 1)
     head = head_other_split[0]
     body = head_other_split[1]
 
@@ -144,11 +310,14 @@ def csv_rows(game: str) -> list[str]:
 
     # loop over the 4 players (with ids 0,1,2,3) and retrieve their starting turn information
     hands: list[set[str]] = [set(), set(), set(), set()]
-    rows: list[list[any]] = []
+    
     for id_ in range(4):
-        rows.append(
+        rows[id_].extend(
             starting_turn_information(gr_cards_lines_split[id_], start_cards_lines_split[id_], deal_lines_split[id_],
-                                      hands, id_))
+                                      hands, id_)) 
+        
+    for i, hand in enumerate(hands):
+        rows[i].extend(hand)
 
     gr_tichu_callers = get_gr_tichu_callers(start_cards_lines_split)
     for id_ in set({0, 1, 2, 3}):
@@ -167,9 +336,6 @@ def csv_rows(game: str) -> list[str]:
         else:
             row.append(0)
 
-    for row in rows:  # game id
-        row.append(1)
-
     scores_even, scores_uneven = score(body.strip().split("\n")[-1])
     for id, row in enumerate(rows):  # score per player
         if id % 2 == 0:
@@ -185,23 +351,50 @@ def csv_rows(game: str) -> list[str]:
 
     return rows
 
+def process_text_file(text_file: str, game_id: str) -> list:
+    rounds = text_file.split("---------------Gr.Tichukarten------------------\n")[1:]
+
+    resulting_rows = []
+    for i, rnd in enumerate(rounds):
+        rnd_rows = csv_rows(rnd, i)  # i is round id
+        for row in rnd_rows:
+            resulting_rows.append([game_id] + row)
+    return resulting_rows
+
+def map_to_rows(rdd_entry: tuple[str, str]):
+    game_id = int(rdd_entry[2].split("/")[-1].split(".")[0])
+    return process_text_file(rdd_entry[1], game_id)
+
 
 if __name__ == "__main__":
-    with open("./columns.txt") as f:
-        columns = [col.replace("\n", "") for col in f.readlines()]
+    ON_CLUSTER = False
 
-    rows = []
-    with open("./tichulog.txt") as f:
-        games = f.read().split("---------------Gr.Tichukarten------------------\n")[1:]  # the first is an empty string
+    if not ON_CLUSTER:
+        with open("./tichulog.txt") as f:
+            rows = process_text_file(f.read(), "1")
 
-        for game in games:
-            game_rows = csv_rows(game)
-            for row in game_rows:
-                rows.append(row)
+        with open('rows.csv', 'w', newline='') as f:
+            write = csv.writer(f)
+            write.writerow(COLUMNS.keys())
+            write.writerows(rows)
 
-    with open('rows.csv', 'w', newline='') as f:
-        write = csv.writer(f)
-        write.writerow(columns)
-        write.writerows(rows)
+        print("\n".join([",".join(map(str, row)) for row in rows]))
 
-    print("\n".join([",".join(map(str, row)) for row in rows]))
+    else:
+        from pyspark.sql import SparkSession
+
+        spark = SparkSession.builder \
+            .master("local[*]") \
+            .getOrCreate()
+        sc = spark.sparkContext
+
+        rdd = sc.wholeTextFiles('/user/s2860406/dev_tichu')
+        processed_rdd = rdd.flatMap(map_to_rows)
+
+        schema = StructType([
+            StructField(key, value["type"](), value["nullable"]) for key, value in COLUMNS.items() 
+        ])
+
+        df = spark.createDataFrame(processed_rdd, schema=schema)
+        df.show()
+        df.write.csv("./tichu_data", mode="overwrite")
