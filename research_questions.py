@@ -1,8 +1,9 @@
 # This file executes the queries to answer our research questions
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, array_intersect, size, concat
+from pyspark.sql.functions import col, array_intersect, size, concat, explode
 
+# Calculate the percentage of hands that won after calling (Grand) Tichu
 def wins_with_tichu_call(df, call, hand):
     # Calculate the percentage of hands that won
     def win_percentage(hands):
@@ -10,7 +11,7 @@ def wins_with_tichu_call(df, call, hand):
         wins = hands.filter(col('out') == 1.0).count()
         return wins/total if total > 0 else 0
 
-    # Filter the rows which called Grand Tichu
+    # Filter the rows which called (Grand) Tichu
     filtered = df.filter(col(call) == 1)
 
     # Filter the rows which were out first
@@ -31,12 +32,25 @@ def wins_with_tichu_call(df, call, hand):
     wins = win_percentage(hands)
     print(wins, "% of players won after their call with four high cards")
 
-def cards_with_winning_tichu_call():
-    pass
+# Find the most common cards in a hand that had an accurate (Grand) Tichu call
+def cards_with_winning_tichu_call(df, call, hand):
+    # Filter the rows which called (Grand) Tichu and won
+    filtered = df.filter(col(call) == 1 and col('out') == 1)
 
+    # Count the frequencies of cards in winning hands
+    counts = (
+        filtered
+        .select(explode(col('hand')).alias('card'))
+        .groupBy('card').count()
+        .orderBy(col('count').desc()).limit(8)
+        )
+    
+    # Print the eight most frequent cards
+    print("\nThe eight most frequent cards are:\n", counts)
+    
 if __name__ == "__main__":
     # Initialize Spark session for distributed processing
-    spark = SparkSession.builder.appName("ELO").getOrCreate()
+    spark = SparkSession.builder.appName("RQs").getOrCreate()
 
     # Path to the rows.csv file in HDFS
     csv = "hdfs:///user/s2163918/input/rows.csv"
@@ -49,7 +63,7 @@ if __name__ == "__main__":
         concat(col('gr-tichu-cards'), col('remaining-cards'))
     )
 
-    print("--- GRAND TICHU ---")
+    print("\n\n--- GRAND TICHU ---")
 
     # Analyse the wins which called Grand Tichu
     wins_with_tichu_call(calls, 'gr-tichu', 'gr-tichu-cards')
@@ -57,8 +71,8 @@ if __name__ == "__main__":
     # Analyse which cards the player had when calling an accurate Grand Tichu
     cards_with_winning_tichu_call(calls, 'gr-tichu', 'gr-tichu-cards')
 
-    print("--- TICHU ---")
-    
+    print("\n\n--- TICHU ---")
+
     # Analyse the wins which called Tichu
     wins_with_tichu_call(calls, 'tichu', 'tichu-cards')
 
