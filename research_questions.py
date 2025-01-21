@@ -3,7 +3,7 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, array_intersect, size, concat
 
-def wins_with_tichu(df, call, hand):
+def wins_with_tichu_call(df, call, hand):
     # Calculate the percentage of hands that won
     def win_percentage(hands):
         total = hands.count()
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     )
 
     # Analyse the wins which called Grand Tichu
-    wins_with_tichu(calls, 'gr-tichu', 'gr-tichu-cards')
+    wins_with_tichu_call(calls, 'gr-tichu', 'gr-tichu-cards')
 
     # Analyse the wins which called Tichu
-    wins_with_tichu(calls, 'tichu', 'tichu-cards')
+    wins_with_tichu_call(calls, 'tichu', 'tichu-cards')
