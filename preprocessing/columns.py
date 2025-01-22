@@ -9,7 +9,7 @@ class Type(Enum):
 
 COLUMNS = {
     "game-id": {
-        "type": Type.INTEGER,
+        "type": Type.STRING,
         "nullable": False,
     },
     "round": {
