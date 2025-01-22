@@ -212,7 +212,7 @@ def csv_rows(rnd: str, rnd_id: int) -> list[any]:
 
     return rows
 
-def process_text_file(text_file: str, game_id: str) -> list:
+def process_rounds(text_file: str, game_id: str) -> list:
     rounds = text_file.split("---------------Gr.Tichukarten------------------\n")[1:]
 
     resulting_rows = []
@@ -221,3 +221,11 @@ def process_text_file(text_file: str, game_id: str) -> list:
         for row in rnd_rows:
             resulting_rows.append([game_id] + row)
     return resulting_rows
+
+def process_game(file_name:str, text_file: str) -> list:
+    games = text_file.split("--END GAME--\n")
+
+    processed_text = []
+    for game_id, game in enumerate(games):
+        processed_text.extend(process_rounds(game, f"{file_name}_{game_id}"))
+    return processed_text
