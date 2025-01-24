@@ -367,4 +367,4 @@ if __name__ == "__main__":
     df = spark.createDataFrame(processed_rdd, schema=schema)
     df.show()
     # PAS DE FOLDER AAN NA IEDERE SPLIT
-    df.write.parquet("./tichu_data_3", mode="overwrite")
+    df.write.parquet("/user/s2860406/tichu_data_3", mode="overwrite")
