@@ -1,3 +1,4 @@
+from pyspark.sql import SparkSession
 from pyspark.sql.window import Window
 from pyspark.sql.functions import col, sum, cast, row_number, first, countDistinct, size, collect_set, dense_rank, collect_list
 
@@ -12,20 +13,22 @@ windowSpec2 = Window.partitionBy('game-id')
 
 # read parquet file
 # compute total score per game-id per player, and store (game-id, player, total_score)
+# only keep the games that have 4 players with 2 distinct total scores
 # create row order sorted on descending total_score
 # count number of distinct scores, mod2, indicates draw (1 if yes, 0 if no)
 # group per game-id into a row with a winner-array and a loser-array
 # concatenate the winners and losers into 1 row per game-id
 # rename and move
 # write to csv
-games =  spark.read.parquet("parquet_df")\
+games =  spark.read.parquet("/user/s2860406/tichu_data_2")\
     .groupBy('game-id', 'player').agg(sum('score').cast("int").alias('total_score'))\
+    .withColumn('distinct', size(collect_set('total_score').over(windowSpec2))).filter(col('distinct') <= 2).drop('distinct')\
     .withColumn("row_number",dense_rank().over(windowSpec))\
     .withColumn('draw', size(collect_set('total_score').over(windowSpec2))%2)\
     .groupBy("game-id", 'row_number', 'draw').agg(collect_list("player").alias("players"))\
     .groupBy("game-id", 'draw').pivot("row_number", [1, 2]).agg(first("players"))\
     .select(col("game-id"), col("1").alias("winners"), col("2").alias("losers"), col('draw'))\
-    .write.parquet("games", mode="overwrite")
+    .write.parquet("/user/s2185369/games_2", mode="overwrite")
 
 ''''
 games = spark.read.csv("rows.csv", header = True)\
