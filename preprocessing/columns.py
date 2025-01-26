@@ -16,7 +16,7 @@ COLUMNS = {
         "type": Type.INTEGER,
         "nullable": False,
     },
-    "player_id": {
+    "player-id": {
         "type": Type.INTEGER,
         "nullable": False,
     },
