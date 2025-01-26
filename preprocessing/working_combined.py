@@ -207,7 +207,7 @@ def csv_rows(rnd: str, rnd_id: int) -> list[any]:
            deal_gone_wrong = True
            break
         row = rows[id_]
-        row = rows[id_]
+        row.append(id_)
         row.append(name)
         row.append(list(gr_cards))
         row.append(list(extra_cards))
