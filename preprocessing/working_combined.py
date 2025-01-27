@@ -362,7 +362,7 @@ if __name__ == "__main__":
 
     rdd = sc.wholeTextFiles('/user/s2860406/split_3')
     processed_rdd = rdd.flatMap(map_to_rows)
-    processed_rdd = processed_rdd.filter(lambda x: len(x) == 15)
+    processed_rdd = processed_rdd.filter(lambda x: len(x) == 16)
     
     schema = StructType([
         StructField(key, spark_sql_type[value["type"]], value["nullable"]) for key, value in COLUMNS.items()
