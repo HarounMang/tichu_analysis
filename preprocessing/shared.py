@@ -1,3 +1,5 @@
+import re
+
 def split_dealing_turn(head: str):
     gr_cards_lines_other_split = head.split("---------------Startkarten------------------\n", 1)
     gr_cards_lines_split = gr_cards_lines_other_split[0].split("\n")
@@ -66,12 +68,19 @@ def starting_turn_information(gr_cards_line: str, start_cards_line: str, deal_li
 
     return name, gr_cards, extra_cards, {"left": left, "middle": middle, "right": right}
 
+def regex_match(line: str):
+    pattern = r"\d"
+    mtch = re.search(pattern, line)
+
+    if mtch:
+        return int(mtch.group())
+    return -1
+
 
 def get_gr_tichu_callers(start_cards_lines_split: list[str]) -> set[int]:
     # from the example of the head you can see the grand tichu calls are after the 4 'startkarten' rows
     gr_tichu_called = len(start_cards_lines_split) > 4  # because there are 4 lines + possible Grand Tichu callers
-    gr_tichu_callers: set[int] = set()
-    return set(gr_tichu_callers.add(int(line[16])) for line in start_cards_lines_split[4:] if gr_tichu_called)
+    return set(regex_match(line) for line in start_cards_lines_split[4:] if gr_tichu_called)
 
 
 def other_turns_information(turns: list[str], hands: list[set[str]]):
@@ -170,6 +179,7 @@ def csv_rows(rnd: str, rnd_id: int) -> list[any]:
             gr_cards_lines_split[id_], start_cards_lines_split[id_], deal_lines_split[id_], hands, id_
         )
         row = rows[id_]
+        row.append(id_)
         row.append(name)
         row.append(list(gr_cards))
         row.append(list(extra_cards))

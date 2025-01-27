@@ -95,8 +95,7 @@ def regex_match(line):
 def get_gr_tichu_callers(start_cards_lines_split: list[str]) -> set[int]:
     # from the example of the head you can see the grand tichu calls are after the 4 'startkarten' rows
     gr_tichu_called = len(start_cards_lines_split) > 4  # because there are 4 lines + possible Grand Tichu callers
-    gr_tichu_callers: set[int] = set()
-    return set(gr_tichu_callers.add(regex_match(line)) for line in start_cards_lines_split[4:] if gr_tichu_called)
+    return set(regex_match(line) for line in start_cards_lines_split[4:] if gr_tichu_called)
 
 
 def other_turns_information(turns: list[str], hands: list[set[str]]):
@@ -208,6 +207,7 @@ def csv_rows(rnd: str, rnd_id: int) -> list[any]:
            deal_gone_wrong = True
            break
         row = rows[id_]
+        row.append(id_)
         row.append(name)
         row.append(list(gr_cards))
         row.append(list(extra_cards))
@@ -280,6 +280,10 @@ COLUMNS = {
         "nullable": False,
     },
     "round": {
+        "type": Type.INTEGER,
+        "nullable": False,
+    },
+    "player-id": {
         "type": Type.INTEGER,
         "nullable": False,
     },
@@ -358,7 +362,7 @@ if __name__ == "__main__":
 
     rdd = sc.wholeTextFiles('/user/s2860406/split_3')
     processed_rdd = rdd.flatMap(map_to_rows)
-    processed_rdd = processed_rdd.filter(lambda x: len(x) == 15)
+    processed_rdd = processed_rdd.filter(lambda x: len(x) == 16)
     
     schema = StructType([
         StructField(key, spark_sql_type[value["type"]], value["nullable"]) for key, value in COLUMNS.items()
