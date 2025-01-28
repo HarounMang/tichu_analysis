@@ -3,31 +3,37 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, array, array_intersect, lit, size, concat, explode, array_contains
 
+import os
+import sys
+
+os.environ['PYSPARK_PYTHON'] = sys.executable
+os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
+
 # Calculate the percentage of hands that won after calling (Grand) Tichu
 def wins_with_tichu_call(df, call, hand):
     # Filter the rows which called (Grand) Tichu
     filtered = df.filter(col(call) == 1)
 
-    # Filter the rows which were out first
-    print("\nAll hands")
-    win_percentage(filtered)
+    # # Filter the rows which were out first
+    # print("\nAll hands")
+    # win_percentage(filtered)
 
-    # Check the percentage of wins with the Dragon and the Phoenix
-    cards = array(lit("Dr"), lit("Ph"))
-    hands = filtered.filter(size(array_intersect(col(hand), cards)) == 2)
+    # # Check the percentage of wins with the Dragon and the Phoenix
+    # cards = array(lit("Dr"), lit("Ph"))
+    # hands = filtered.filter(size(array_intersect(col(hand), cards)) == 2)
 
-    print("\nThe hand contains a Dragon and a Phoenix")
-    win_percentage(hands)
+    # print("\nThe hand contains a Dragon and a Phoenix")
+    # win_percentage(hands)
 
-    # Check the percentage of wins with at least four of the best eight cards
-    cards = array(lit("Dr"), lit("Ph"), lit("Hu"), lit("Ma"), lit("RA"), lit("SA"), lit("GA"), lit("BA"))
-    hands = filtered.filter(size(array_intersect(col(hand), cards)) >= 4)
+    # # Check the percentage of wins with at least four of the best eight cards
+    # cards = array(lit("Dr"), lit("Ph"), lit("Hu"), lit("Ma"), lit("RA"), lit("SA"), lit("GA"), lit("BA"))
+    # hands = filtered.filter(size(array_intersect(col(hand), cards)) >= 4)
 
-    print("\nThe hand contains (at least) four high cards")
-    win_percentage(hands)
+    # print("\nThe hand contains (at least) four high cards")
+    # win_percentage(hands)
 
     # Check the percentage of wins with a bomb
-    hands = filtered.filter(col('bomb-received') == 1)
+    hands = filtered.filter(col('bomb') == 1)
 
     print("\nThe hand contains a bomb")
     win_percentage(hands)
@@ -79,7 +85,7 @@ def passing_the_dog(df):
     win_percentage(hands)
     
 def queries(df):
-    calls = df.select(col('gr-tichu'), col('tichu'), col('gr-tichu-cards'), col('out'), col('extra-cards'), col('bomb-received'))
+    calls = df.select(col('gr-tichu'), col('tichu'), col('gr-tichu-cards'), col('out'), col('extra-cards'), col('bomb'))
 
     print("\n- GRAND TICHU -")
 
@@ -119,7 +125,8 @@ if __name__ == "__main__":
     df = spark.read.parquet(file_data)
     elo_df = spark.read.parquet(elo_path)
 
-    joined_df = df.join(elo_df, df.player == elo_df.Player_ID).drop('Player_ID')
+    joined_df = df.join(elo_df, df.player == elo_df.Player_ID).drop('Player_ID')\
+        .withColumn('bomb', col('bomb-received').cast("int"))
 
     print("\n\n--- LOW ELO ---")
     queries(joined_df.where(col('ELO') <= 1200))
