@@ -1,7 +1,7 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, FloatType, IntegerType, ArrayType
 
-from shared import process_text_file
+from shared import process_game
 from columns import COLUMNS, Type
 
 spark_sql_type = {
@@ -10,10 +10,8 @@ spark_sql_type = {
     Type.FLOAT: FloatType(),
     Type.STRING_ARRAY: ArrayType(StringType(), containsNull=False)
 }
-
-def map_to_rows(rdd_entry: tuple[str, str]):
-    game_id = int(rdd_entry[0].split("/")[-1].split(".")[0])
-    return process_text_file(rdd_entry[1], game_id)
+def map_to_rows(rdd_entry: tuple[str, str]) -> list:
+    return process_game(rdd_entry[0].split("/")[-1], rdd_entry[1])
 
 if __name__ == "__main__":
     spark = SparkSession.builder \
@@ -30,4 +28,4 @@ if __name__ == "__main__":
 
     df = spark.createDataFrame(processed_rdd, schema=schema)
     df.show()
-    df.write.csv("./tichu_data", mode="overwrite")
+    df.write.parquet("./tichu_data", mode="overwrite")
