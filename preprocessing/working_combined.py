@@ -16,7 +16,7 @@ def split_dealing_turn(head: str):
     deal_lines_split = start_cards_lines_other_split[1].split("\n")[:-1]  # [:-1] to get rid of the empty string
 
     bombs_player_id = []
-    if "BOMBE" in deal_lines_split[-1]:
+    if "BOMBE: (" in deal_lines_split[-1]:
         bombs_players = deal_lines_split[-1].split(":")[1].strip().split(" ")
         bombs_player_id = [int(player[1]) for player in bombs_players]
         deal_lines_split = deal_lines_split[:4]
