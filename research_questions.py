@@ -34,7 +34,6 @@ def wins_with_tichu_call(df, hand):
     win_percentage(hands)
 
     # Check the percentage of wins with at least four of the best ten cards
-    cards = array(lit("Dr"), lit("Ph"), lit("RA"), lit("SA"), lit("GA"), lit("BA"), lit("RK"), lit("SK"), lit("GK"), lit("BK"))
     kings = array(lit("RK"), lit("SK"), lit("GK"), lit("BK"))
     hands = df.filter((size(array_intersect(col(hand), cards)) >= 4) & (size(array_intersect(col(hand), kings)) <= 2))
 
@@ -134,7 +133,6 @@ def strategies(df, call, hand):
     call_percentage(hands, call)
 
     # Check the percentage of wins with at least four of the best ten cards
-    cards = array(lit("Dr"), lit("Ph"), lit("RA"), lit("SA"), lit("GA"), lit("BA"), lit("RK"), lit("SK"), lit("GK"), lit("BK"))
     kings = array(lit("RK"), lit("SK"), lit("GK"), lit("BK"))
     hands = df.filter((size(array_intersect(col(hand), cards)) >= 4) & (size(array_intersect(col(hand), kings)) <= 2))
 
@@ -169,7 +167,7 @@ def analysing_cards(df):
     calls = df.select(col('gr-tichu'), col('gr-tichu-cards'), col('out'), col('bomb-received'))
 
     # Analyse which cards the player had when calling an accurate Grand Tichu
-    cards_with_winning_tichu_call('gr-tichu', 'gr-tichu-cards')
+    cards_with_winning_tichu_call(calls, 'gr-tichu', 'gr-tichu-cards')
 
     print("\n- TICHU -")
 
