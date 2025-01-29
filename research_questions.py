@@ -1,7 +1,8 @@
 # This file executes the queries to answer our research questions
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, array, array_intersect, lit, size, concat, explode, array_contains
+from pyspark.sql.functions import col, array, array_intersect, lit, size, concat, explode, array_contains, udf, sum as sum_, format_string
+from pyspark.sql.types import StringType
 
 import os
 import sys
@@ -181,6 +182,26 @@ def analysing_cards(df):
 
     # Analyse which cards the player had when they won a round
     cards_with_winning_hand(calls)
+
+def determine_dealing_frequency(df):
+    print("\n\nFREQUENCY OF DEALING CARDS\n\n")
+    cards = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'B', 'D', 'K', 'A']
+    colors = ['B', 'G', 'R', 'S']
+    ranks = {f"{color}{c}" : c for c in cards for color in colors } 
+    ranks["Ph"] = "Phoenix"
+    ranks["Hu"] = "Dog"
+    ranks["Ma"] = "1"
+    ranks["Dr"] = "Dragon"
+    
+    rank_udf = udf(lambda x: ranks[x], StringType())
+    deals = ["left", "middle", "right"]
+    for d in deals:
+        print(f"\n\n{d.upper()}\n\n")
+        rank_df = df.withColumn(f"rank-{d}", rank_udf(col(f"deal-{d}")))
+        count_df = rank_df.groupBy(col(f"rank-{d}")).count()
+        total_sum = count_df.agg(sum_("count").alias("total_sum")).collect()[0]["total_sum"]
+        proportional_df = count_df.withColumn("proportion", col("count") / total_sum).withColumn("proportion", format_string("%.2e", col("proportion")))
+        proportional_df.sort(col(f"rank-{d}")).show()
 
 def queries(df):
     print("- GRAND TICHU -")
