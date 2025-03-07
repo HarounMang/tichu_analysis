@@ -82,7 +82,7 @@ def csv_rows(rnd: str, rnd_id: int) -> list[any]:
 
         splitted_line = line.split(": ", 1)
         player = splitted_line[0][3:].split(" passt.", 1)[0]
-        player_id = int(line[1])
+        player_id = int(line.replace('\x00', '')[1])
 
         row.append(turn)
         turn += 1
