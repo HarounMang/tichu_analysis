@@ -88,10 +88,10 @@ def csv_rows(rnd: str, rnd_id: int) -> list[any]:
         turn += 1
         row.append(player_id)
         row.append(player)
-        # row.append(list(hands[player_id]))
+        row.append(list(hands[player_id]))
 
         if line[-6:] == "passt.":
-            rows.append(row + [None, int(tichu_called)])
+            rows.append(row + [None, None, int(tichu_called)])
             continue
 
         cards_played = splitted_line[1].strip().split(" ")
@@ -100,13 +100,19 @@ def csv_rows(rnd: str, rnd_id: int) -> list[any]:
         if dragon_given_to is None and dragon_played_turn is not None:
             dragon_played_turn = None
 
+        corrupt_cards = []
         for card in cards_played:
             if card == "Dr":
                 dragon_played_turn = turn
             
-            # hands[player_id].remove(card)
+            hand = hands[player_id]
 
-        rows.append(row + [cards_played, int(tichu_called)])
+            if card in hand:
+                hands[player_id].remove(card)
+            else:
+                corrupt_cards.append(card)
+
+        rows.append(row + [corrupt_cards or None, cards_played, int(tichu_called)])
 
         tichu_called = False    
 
@@ -157,19 +163,23 @@ COLUMNS = {
         "type": Type.STRING,
         "nullable": False,
     },
-    # "cards": {
-    #     "type": Type.STRING_ARRAY,
-    #     "nullable": False,
-    # },
+    "cards": {
+        "type": Type.STRING_ARRAY,
+        "nullable": False,
+    },
+    "corrupt-cards": {
+        "type": Type.STRING_ARRAY,
+        "nullable": True,
+    },
     "cards-played": {
         "type": Type.STRING_ARRAY,
         "nullable": True,
     },
-    "tichu_called": {
+    "tichu-called": {
         "type": Type.INTEGER,
         "nullable": True,
     },
-    "dragon_passed_to": {
+    "dragon-passed-to": {
         "type": Type.STRING,
         "nullable": True,
     }
@@ -194,7 +204,7 @@ if __name__ == "__main__":
         .getOrCreate()
     sc = spark.sparkContext
 
-    rdd = sc.wholeTextFiles('/user/s2860406/dev_split')
+    rdd = sc.wholeTextFiles('/user/s2860406/split_1')
     processed_rdd = rdd.flatMap(map_to_rows)
     processed_rdd = processed_rdd.filter(lambda x: len(x) == len(COLUMNS))
     
@@ -206,4 +216,4 @@ if __name__ == "__main__":
     
     df.show()
     # PAS DE FOLDER AAN NA IEDERE SPLIT
-    df.write.parquet("/user/s2860406/midgame_data", mode="overwrite")
+    df.write.parquet("/user/s2860406/midgame_data/split_1", mode="overwrite")
